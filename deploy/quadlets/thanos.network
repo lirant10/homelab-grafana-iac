@@ -1,0 +1,3 @@
+# Private network for MinIO + Thanos: containers reach each other by name
+[Network]
+NetworkName=thanos

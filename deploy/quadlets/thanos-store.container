@@ -1,0 +1,17 @@
+[Unit]
+Description=Thanos store - serves old data from MinIO
+Wants=minio.service
+After=minio.service
+
+[Container]
+ContainerName=thanos-store
+Image=quay.io/thanos/thanos:v0.34.0
+Exec=store --data-dir=/tmp --objstore.config-file=/etc/thanos/bucket.yml --grpc-address=0.0.0.0:10901 --http-address=0.0.0.0:10902
+Network=thanos.network
+Secret=thanos_bucket,type=mount,target=/etc/thanos/bucket.yml
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

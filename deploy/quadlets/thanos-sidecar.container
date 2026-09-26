@@ -1,0 +1,18 @@
+[Unit]
+Description=Thanos sidecar - uploads Prometheus blocks to MinIO
+Wants=prometheus.service minio.service
+After=prometheus.service minio.service
+
+[Container]
+ContainerName=thanos-sidecar
+Image=quay.io/thanos/thanos:v0.34.0
+Exec=sidecar --tsdb.path=/prometheus --prometheus.url=http://host.containers.internal:9090 --objstore.config-file=/etc/thanos/bucket.yml --grpc-address=0.0.0.0:10901 --http-address=0.0.0.0:10902
+Network=thanos.network
+Volume=%h/.config/prometheus/data:/prometheus
+Secret=thanos_bucket,type=mount,target=/etc/thanos/bucket.yml
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

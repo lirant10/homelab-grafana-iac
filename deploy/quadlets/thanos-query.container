@@ -1,0 +1,17 @@
+[Unit]
+Description=Thanos query - single query endpoint for Grafana
+Wants=thanos-sidecar.service thanos-store.service
+After=thanos-sidecar.service thanos-store.service
+
+[Container]
+ContainerName=thanos-query
+Image=quay.io/thanos/thanos:v0.34.0
+Exec=query --http-address=0.0.0.0:9090 --endpoint=thanos-sidecar:10901 --endpoint=thanos-store:10901
+Network=thanos.network
+PublishPort=9091:9090
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

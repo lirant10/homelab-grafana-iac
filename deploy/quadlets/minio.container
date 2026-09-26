@@ -1,0 +1,22 @@
+[Unit]
+Description=MinIO - object storage for Thanos long-term data
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=minio
+Image=quay.io/minio/minio:latest
+Exec=server /data --console-address :9001
+Network=thanos.network
+PublishPort=9000:9000
+PublishPort=9001:9001
+Volume=%h/thanos-lab/minio-data:/data
+# Credentials live in Podman secrets, never in Git
+Secret=minio_root_user,type=env,target=MINIO_ROOT_USER
+Secret=minio_root_password,type=env,target=MINIO_ROOT_PASSWORD
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
