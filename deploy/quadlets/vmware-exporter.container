@@ -4,3 +4,6 @@ PublishPort=9272:9272
 Volume=%h/.config/vmware-exporter/config.yml:/config/config.yml:ro,Z
 Environment=CONFIG_FILE=/config/config.yml
 Exec=-c /config/config.yml
+
+[Install]
+WantedBy=default.target
