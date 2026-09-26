@@ -877,7 +877,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "vmware_vm_power_state{host_name=~\"$esxi_host\", vm_name=~\"$vm\"}",
+          "expr": "max by (vm_name, host_name, ds_name) (vmware_vm_power_state{host_name=~\"$esxi_host\", vm_name=~\"$vm\"})",
           "legendFormat": "",
           "refId": "A",
           "range": false,
@@ -889,7 +889,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "vmware_vm_num_cpu{host_name=~\"$esxi_host\", vm_name=~\"$vm\"}",
+          "expr": "max by (vm_name, host_name, ds_name) (vmware_vm_num_cpu{host_name=~\"$esxi_host\", vm_name=~\"$vm\"})",
           "legendFormat": "",
           "refId": "B",
           "range": false,
@@ -901,7 +901,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "vmware_vm_memory_max{host_name=~\"$esxi_host\", vm_name=~\"$vm\"} * 1024 * 1024",
+          "expr": "max by (vm_name, host_name, ds_name) (vmware_vm_memory_max{host_name=~\"$esxi_host\", vm_name=~\"$vm\"}) * 1024 * 1024",
           "legendFormat": "",
           "refId": "C",
           "range": false,
@@ -913,7 +913,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "time() - vmware_vm_boot_timestamp_seconds{host_name=~\"$esxi_host\", vm_name=~\"$vm\"} and vmware_vm_power_state{host_name=~\"$esxi_host\", vm_name=~\"$vm\"} == 1",
+          "expr": "max by (vm_name, host_name, ds_name) (time() - vmware_vm_boot_timestamp_seconds{host_name=~\"$esxi_host\", vm_name=~\"$vm\"}) and on(vm_name, host_name, ds_name) max by (vm_name, host_name, ds_name) (vmware_vm_power_state{host_name=~\"$esxi_host\", vm_name=~\"$vm\"} == 1)",
           "legendFormat": "",
           "refId": "D",
           "range": false,
@@ -925,7 +925,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "vmware_vm_cpu_usage_average{host_name=~\"$esxi_host\", vm_name=~\"$vm\"} / 100",
+          "expr": "max by (vm_name, host_name, ds_name) (vmware_vm_cpu_usage_average{host_name=~\"$esxi_host\", vm_name=~\"$vm\"}) / 100",
           "legendFormat": "",
           "refId": "E",
           "range": false,
@@ -1113,7 +1113,10 @@
               "job": true,
               "instance": true,
               "dc_name": true,
-              "cluster_name": true
+              "cluster_name": true,
+              "cluster": true,
+              "replica": true,
+              "tags": true
             },
             "indexByName": {
               "vm_name": 0,
@@ -1870,7 +1873,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "podman_container_state * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"}",
+          "expr": "max by (instance, name, image, pod_name) (podman_container_state * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"})",
           "legendFormat": "",
           "refId": "A",
           "range": false,
@@ -1882,7 +1885,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(podman_container_cpu_seconds_total[5m]) * 100 * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"}",
+          "expr": "max by (instance, name, image, pod_name) (rate(podman_container_cpu_seconds_total[5m]) * 100 * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"})",
           "legendFormat": "",
           "refId": "B",
           "range": false,
@@ -1894,7 +1897,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "podman_container_mem_usage_bytes * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"}",
+          "expr": "max by (instance, name, image, pod_name) (podman_container_mem_usage_bytes * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"})",
           "legendFormat": "",
           "refId": "C",
           "range": false,
@@ -1906,7 +1909,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "((time() - podman_container_started_seconds) and on(instance, id) (podman_container_state == 2)) * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"}",
+          "expr": "max by (instance, name, image, pod_name) (((time() - podman_container_started_seconds) and on(instance, id) (podman_container_state == 2)) * on(instance, id) group_left(name, image) podman_container_info{instance=~\"$podman_host\", name=~\"$container\"})",
           "legendFormat": "",
           "refId": "D",
           "range": false,
@@ -2085,7 +2088,9 @@
               "id": true,
               "pod_id": true,
               "job": true,
-              "__name__": true
+              "__name__": true,
+              "cluster": true,
+              "replica": true
             },
             "indexByName": {
               "name": 0,
