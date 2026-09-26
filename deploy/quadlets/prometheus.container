@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus
+After=network-online.target
+
+[Container]
+Image=docker.io/prom/prometheus:latest
+PublishPort=9090:9090
+Volume=%h/homelab-grafana-iac/deploy/prometheus:/etc/prometheus:ro,Z
+Volume=%h/.config/prometheus/data:/prometheus:Z
+Exec=--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --storage.tsdb.min-block-duration=2h --storage.tsdb.max-block-duration=2h --web.enable-lifecycle
+
+[Install]
+WantedBy=default.target

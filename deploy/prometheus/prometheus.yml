@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 60s
+  external_labels:
+    cluster: lab
+    replica: r1
+
+scrape_configs:
+  - job_name: 'vmware_esx'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - '192.168.0.49'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'host.containers.internal:9272'
+
+  - job_name: 'podman'
+    static_configs:
+      - targets: ['host.containers.internal:9882']
+        labels:
+          instance: arch-pc

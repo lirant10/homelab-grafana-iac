@@ -1,24 +1,6 @@
-# VMware exporter (pryorda/vmware_exporter) -> http://<host>:9272/metrics
-# Works against a standalone ESXi host or a vCenter.
-# Use a read-only vSphere account, and keep its password in a Podman secret:
-#   printf '%s' 'the-password' | podman secret create vsphere_password -
-[Unit]
-Description=VMware Prometheus exporter
-Wants=network-online.target
-After=network-online.target
-
 [Container]
-ContainerName=vmware-exporter
 Image=docker.io/pryorda/vmware_exporter:latest
 PublishPort=9272:9272
-Environment=VSPHERE_HOST=192.168.0.20
-Environment=VSPHERE_USER=monitoring@vsphere.local
-Environment=VSPHERE_IGNORE_SSL=True
-Environment=VSPHERE_SPECS_SIZE=2000
-Secret=vsphere_password,type=env,target=VSPHERE_PASSWORD
-
-[Service]
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
+Volume=%h/.config/vmware-exporter/config.yml:/config/config.yml:ro,Z
+Environment=CONFIG_FILE=/config/config.yml
+Exec=-c /config/config.yml
