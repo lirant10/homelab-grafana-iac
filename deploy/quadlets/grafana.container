@@ -20,8 +20,8 @@ Volume=%h/homelab-grafana-iac/provisioning:/etc/grafana/provisioning:ro,Z
 Volume=%h/homelab-grafana-iac/dashboards:/etc/grafana/dashboards:ro,Z
 
 # Where Grafana reaches Prometheus / Thanos Query. host.containers.internal = the host.
-Environment=PROMETHEUS_URL=http://host.containers.internal:9090
-Environment=GF_SERVER_ROOT_URL=http://arch-pc:3000
+Environment=PROMETHEUS_URL=http://host.containers.internal:9091
+Environment=GF_SERVER_ROOT_URL=http://192.168.0.10:3000
 Environment=GF_ANALYTICS_REPORTING_ENABLED=false
 
 # Admin password from a Podman secret (never in Git):
