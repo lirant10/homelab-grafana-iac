@@ -1,0 +1,16 @@
+# Grafana loads every JSON file under /etc/grafana/dashboards.
+# Sub-folders become Grafana folders (dashboards/homelab -> "homelab").
+apiVersion: 1
+
+providers:
+  - name: homelab-git
+    orgId: 1
+    type: file
+    # Git is the source of truth: the UI can't overwrite or delete these.
+    disableDeletion: true
+    allowUiUpdates: false
+    # how often Grafana re-reads the files (picks up `git pull` automatically)
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: true

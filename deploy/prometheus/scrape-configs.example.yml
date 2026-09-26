@@ -1,0 +1,23 @@
+# Add these jobs under `scrape_configs:` in your prometheus.yml.
+# Replace the IPs/hostnames with yours.
+
+scrape_configs:
+  # vSphere API calls are slow - scrape every 60s with a long timeout.
+  - job_name: vmware
+    scrape_interval: 60s
+    scrape_timeout: 55s
+    static_configs:
+      - targets: ["arch-pc:9272"]      # where vmware-exporter runs
+
+  # One target per machine that runs podman-exporter.
+  # The `instance` label is what the dashboard's "Podman host" dropdown shows,
+  # so give each host a readable name.
+  - job_name: podman
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["arch-pc:9882"]
+        labels:
+          instance: arch-pc
+      - targets: ["192.168.0.10:9882"]
+        labels:
+          instance: ser-arch-test

@@ -1,0 +1,13 @@
+# secrets never go to Git
+*.env
+.env*
+!.env.example
+secrets/
+*.token
+
+# local junk
+*.tmp
+__pycache__/
+.venv/
+.vscode/
+.idea/

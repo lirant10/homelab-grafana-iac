@@ -1,0 +1,13 @@
+# Pulls the latest dashboards from GitHub. Grafana notices the changed files
+# within updateIntervalSeconds (30s) - no restart needed.
+# Install: cp deploy/systemd/grafana-gitsync.* ~/.config/systemd/user/
+#          systemctl --user daemon-reload
+#          systemctl --user enable --now grafana-gitsync.timer
+[Unit]
+Description=git pull homelab-grafana-iac
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/git -C %h/homelab-grafana-iac pull --ff-only --quiet

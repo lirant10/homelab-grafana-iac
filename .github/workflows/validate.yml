@@ -1,0 +1,67 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint dashboards + PromQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      - name: Static checks + extract PromQL
+        run: python scripts/validate.py --emit-rules /tmp/dashboard-exprs.yml
+
+      - name: Install promtool
+        env:
+          PROM_VERSION: "3.5.0"
+        run: |
+          curl -fsSL "https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz" | tar xz
+          sudo mv "prometheus-${PROM_VERSION}.linux-amd64/promtool" /usr/local/bin/
+
+      - name: PromQL syntax check
+        run: promtool check rules /tmp/dashboard-exprs.yml
+
+  grafana-load:
+    name: Grafana loads the provisioning
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Grafana with this repo's provisioning
+        run: |
+          docker run -d --name grafana -p 3000:3000 \
+            -e PROMETHEUS_URL=http://localhost:9090 \
+            -v "$PWD/provisioning:/etc/grafana/provisioning:ro" \
+            -v "$PWD/dashboards:/etc/grafana/dashboards:ro" \
+            grafana/grafana:latest
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/api/health && break
+            sleep 2
+          done
+
+      - name: Dashboard and data source are provisioned
+        run: |
+          sleep 5
+          curl -sf -u admin:admin http://localhost:3000/api/dashboards/uid/homelab-vmware-podman \
+            | jq -e '.dashboard.panels | length > 0'
+          curl -sf -u admin:admin http://localhost:3000/api/datasources/uid/prometheus-homelab \
+            | jq -e '.type == "prometheus"'
+
+      - name: No provisioning errors in Grafana log
+        run: |
+          docker logs grafana > grafana.log 2>&1
+          if grep -iE 'level=error.*(provision|dashboard)' grafana.log; then exit 1; fi
+
+      - name: Show Grafana log on failure
+        if: failure()
+        run: docker logs grafana

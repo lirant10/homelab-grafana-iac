@@ -1,0 +1,40 @@
+# Rootless Podman Quadlet for Grafana.
+# Install:  cp deploy/quadlets/grafana* ~/.config/containers/systemd/
+#           systemctl --user daemon-reload && systemctl --user start grafana
+[Unit]
+Description=Grafana (dashboards provisioned from Git)
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=grafana
+# Pin to the version you already run (Grafana > Help > About).
+# Never pin to an OLDER version than your current DB - downgrades aren't supported.
+Image=docker.io/grafana/grafana:latest
+PublishPort=3000:3000
+
+# Persistent state (users, preferences, UI-made dashboards)
+Volume=grafana-data.volume:/var/lib/grafana
+# Everything below comes from the Git checkout - read-only
+Volume=%h/homelab-grafana-iac/provisioning:/etc/grafana/provisioning:ro,Z
+Volume=%h/homelab-grafana-iac/dashboards:/etc/grafana/dashboards:ro,Z
+
+# Where Grafana reaches Prometheus / Thanos Query. host.containers.internal = the host.
+Environment=PROMETHEUS_URL=http://host.containers.internal:9090
+Environment=GF_SERVER_ROOT_URL=http://arch-pc:3000
+Environment=GF_ANALYTICS_REPORTING_ENABLED=false
+
+# Admin password from a Podman secret (never in Git):
+#   printf '%s' 'S0me-Str0ng-Pass' | podman secret create grafana_admin_password -
+# Only used when the Grafana DB is created for the first time.
+Secret=grafana_admin_password,type=mount,target=/run/secrets/grafana_admin_password
+Environment=GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+
+HealthCmd=wget -qO- http://localhost:3000/api/health || exit 1
+HealthInterval=30s
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

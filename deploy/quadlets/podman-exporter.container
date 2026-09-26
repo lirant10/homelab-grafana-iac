@@ -1,0 +1,27 @@
+# Podman exporter (containers/prometheus-podman-exporter) -> http://<host>:9882/metrics
+# Run one on EVERY machine whose containers you want on the dashboard.
+#
+# Rootless (this file, in ~/.config/containers/systemd/): needs the user API socket
+#   systemctl --user enable --now podman.socket
+# Rootful containers: put a copy in /etc/containers/systemd/, change the socket
+#   Volume to /run/podman/podman.sock and drop UserNS=keep-id.
+[Unit]
+Description=Podman Prometheus exporter
+Requires=podman.socket
+After=podman.socket
+
+[Container]
+ContainerName=podman-exporter
+Image=quay.io/navidys/prometheus-podman-exporter:latest
+PublishPort=9882:9882
+# keep-id: inside the container we are the same user that owns the socket
+UserNS=keep-id
+SecurityLabelDisable=true
+Volume=%t/podman/podman.sock:/run/podman/podman.sock
+Environment=CONTAINER_HOST=unix:///run/podman/podman.sock
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

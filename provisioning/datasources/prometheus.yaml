@@ -1,0 +1,18 @@
+# Grafana data source provisioning.
+# Grafana expands ${VAR} from its environment, so the URL lives in the
+# container definition (deploy/quadlets/grafana.container), not in Git.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus (homelab)
+    uid: prometheus-homelab
+    type: prometheus
+    access: proxy
+    # Prometheus, or Thanos Query if you query through Thanos.
+    url: ${PROMETHEUS_URL}
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      # match your global scrape_interval
+      timeInterval: 30s
