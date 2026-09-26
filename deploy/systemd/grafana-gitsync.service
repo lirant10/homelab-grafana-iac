@@ -11,3 +11,4 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/git -C %h/homelab-grafana-iac pull --ff-only --quiet
+ExecStartPost=-/usr/bin/curl -fsS -X POST http://localhost:9090/-/reload
