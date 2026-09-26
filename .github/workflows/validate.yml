@@ -41,6 +41,7 @@ jobs:
         run: |
           docker run -d --name grafana -p 3000:3000 \
             -e PROMETHEUS_URL=http://localhost:9090 \
+            -e TELEGRAM_BOT_TOKEN=ci-dummy-token -e TELEGRAM_CHAT_ID=1 \
             -v "$PWD/provisioning:/etc/grafana/provisioning:ro" \
             -v "$PWD/dashboards:/etc/grafana/dashboards:ro" \
             grafana/grafana:latest
@@ -56,6 +57,10 @@ jobs:
             | jq -e '.dashboard.panels | length > 0'
           curl -sf -u admin:admin http://localhost:3000/api/datasources/uid/prometheus-homelab \
             | jq -e '.type == "prometheus"'
+          curl -sf -u admin:admin http://localhost:3000/api/v1/provisioning/alert-rules \
+            | jq -e 'length >= 6'
+          curl -sf -u admin:admin http://localhost:3000/api/v1/provisioning/contact-points \
+            | jq -e 'map(.name) | index("telegram") != null'
 
       - name: No provisioning errors in Grafana log
         run: |

@@ -85,7 +85,7 @@ def check_dashboard(path: Path, exprs: list[tuple[str, str]]) -> None:
         err(f"{rel}: add a 'datasource' variable so the dashboard is portable")
 
 
-def check_provisioning() -> None:
+def check_provisioning(exprs: list[tuple[str, str]]) -> None:
     for f in sorted(glob.glob(str(ROOT / "provisioning/**/*.y*ml"), recursive=True)):
         rel = Path(f).relative_to(ROOT)
         try:
@@ -95,6 +95,13 @@ def check_provisioning() -> None:
             continue
         if not isinstance(doc, dict) or doc.get("apiVersion") != 1:
             err(f"{rel}: expected 'apiVersion: 1' at the top")
+            continue
+        for group in doc.get("groups", []):
+            for rule in group.get("rules", []):
+                for q in rule.get("data", []):
+                    expr = q.get("model", {}).get("expr")
+                    if expr:
+                        exprs.append((f"alert {rule.get('uid')}", expr.replace("$$", "$")))
 
 
 def to_plain_promql(expr: str) -> str:
@@ -115,7 +122,7 @@ def main() -> int:
     exprs: list[tuple[str, str]] = []
     for d in dashboards:
         check_dashboard(d, exprs)
-    check_provisioning()
+    check_provisioning(exprs)
 
     if args.emit_rules:
         rules = [{"record": f"check:expr_{i}", "expr": to_plain_promql(e)}

@@ -1,0 +1,25 @@
+# Where alerts go: a Telegram bot.
+# The token and chat id come from Podman secrets (env vars in grafana.container),
+# never from Git.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: telegram
+    receivers:
+      - uid: telegram-homelab
+        type: telegram
+        settings:
+          bottoken: $TELEGRAM_BOT_TOKEN
+          chatid: "$TELEGRAM_CHAT_ID"
+          message: |
+            {{ range .Alerts }}{{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }} {{ .Annotations.summary }}
+            {{ end }}
+
+policies:
+  - orgId: 1
+    receiver: telegram
+    group_by: ["grafana_folder", "alertname"]
+    group_wait: 30s       # wait a bit so alerts that fire together arrive as one message
+    group_interval: 5m
+    repeat_interval: 12h  # remind again if still broken after 12h

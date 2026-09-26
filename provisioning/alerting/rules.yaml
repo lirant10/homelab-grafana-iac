@@ -1,0 +1,138 @@
+# Alert rules - Grafana loads them at startup (provisioning/alerting).
+# Every rule: A = PromQL query, C = threshold on A, must stay true for "for" -> Telegram.
+# "$$labels" = a literal "$labels" (a single $ would be read as an env variable).
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: homelab
+    folder: homelab
+    interval: 1m
+    rules:
+
+      # An exporter or a whole machine stopped answering Prometheus
+      - uid: target-down
+        title: Prometheus can't reach a target
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "Prometheus can't reach {{ $$labels.job }} on {{ $$labels.instance }} (exporter or machine down)"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model: {refId: A, instant: true, expr: up}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [1]}}]}
+
+      # VMs that should always be on - edit the list to change which ones
+      - uid: vm-off
+        title: Important VM is powered off
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "VM {{ $$labels.vm_name }} is powered off"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model:
+              refId: A
+              instant: true
+              expr: |
+                max by (vm_name) (vmware_vm_power_state{vm_name=~"TER-Tailscale|LocalStack-AWS-Docker|LocalStack-Azure-Docker|Vaultwarden|Ser-Arch-Test"})
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [1]}}]}
+
+      # A container that existed in the last hour is gone, or is exited/stopped
+      # (Quadlet containers are removed when they stop, so "gone" is the usual case)
+      - uid: container-gone
+        title: Container stopped
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "Container {{ $$labels.name }} on {{ $$labels.instance }} stopped"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model:
+              refId: A
+              instant: true
+              expr: |
+                count by (instance, name) (last_over_time(podman_container_info[1h]))
+                  unless count by (instance, name) (podman_container_info)
+                or max by (instance, name) (
+                  (podman_container_state == 3 or podman_container_state == 5)
+                  * on(instance, id) group_left(name) podman_container_info
+                )
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [0]}}]}
+
+      - uid: datastore-full
+        title: Datastore almost full
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "Datastore {{ $$labels.ds_name }} is {{ printf \"%.0f\" $$values.A.Value }}% full"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model:
+              refId: A
+              instant: true
+              expr: max by (ds_name) ((1 - vmware_datastore_freespace_size / vmware_datastore_capacity_size) * 100)
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [85]}}]}
+
+      - uid: guest-disk-full
+        title: VM disk almost full
+        condition: C
+        for: 30m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "Disk {{ $$labels.partition }} on {{ $$labels.vm_name }} is {{ printf \"%.0f\" $$values.A.Value }}% full"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model:
+              refId: A
+              instant: true
+              expr: max by (vm_name, partition) ((1 - vmware_vm_guest_disk_free / vmware_vm_guest_disk_capacity) * 100)
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [90]}}]}
+
+      - uid: esxi-memory
+        title: ESXi memory high
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "ESXi {{ $$labels.host_name }} memory at {{ printf \"%.0f\" $$values.A.Value }}%"
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus-homelab
+            model:
+              refId: A
+              instant: true
+              expr: max by (host_name) (vmware_host_memory_usage / vmware_host_memory_max * 100)
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [90]}}]}

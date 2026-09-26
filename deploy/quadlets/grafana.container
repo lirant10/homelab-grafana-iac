@@ -30,6 +30,10 @@ Environment=GF_ANALYTICS_REPORTING_ENABLED=false
 Secret=grafana_admin_password,type=mount,target=/run/secrets/grafana_admin_password
 Environment=GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
 
+# Telegram bot for alerts (provisioning/alerting/telegram.yaml reads these env vars)
+Secret=telegram_bot_token,type=env,target=TELEGRAM_BOT_TOKEN
+Secret=telegram_chat_id,type=env,target=TELEGRAM_CHAT_ID
+
 HealthCmd=wget -qO- http://localhost:3000/api/health || exit 1
 HealthInterval=30s
 
