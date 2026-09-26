@@ -1,6 +1,6 @@
 # Alert rules - Grafana loads them at startup (provisioning/alerting).
 # Every rule: A = PromQL query, C = threshold on A, must stay true for "for" -> Telegram.
-# "$$labels" = a literal "$labels" (a single $ would be read as an env variable).
+# "$labels" = a literal "$labels" (a single $ would be read as an env variable).
 apiVersion: 1
 groups:
   - orgId: 1
@@ -17,7 +17,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Prometheus can't reach {{ $$labels.job }} on {{ $$labels.instance }} (exporter or machine down)"
+          summary: "Prometheus can't reach {{ $labels.job }} on {{ $labels.instance }} (exporter or machine down)"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
@@ -35,7 +35,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "VM {{ $$labels.vm_name }} is powered off"
+          summary: "VM {{ $labels.vm_name }} is powered off"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
@@ -58,7 +58,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Container {{ $$labels.name }} on {{ $$labels.instance }} stopped"
+          summary: "Container {{ $labels.name }} on {{ $labels.instance }} stopped"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
@@ -84,7 +84,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Datastore {{ $$labels.ds_name }} is {{ printf \"%.0f\" $$values.A.Value }}% full"
+          summary: "Datastore {{ $labels.ds_name }} is {{ printf \"%.0f\" $values.A.Value }}% full"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
@@ -104,7 +104,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Disk {{ $$labels.partition }} on {{ $$labels.vm_name }} is {{ printf \"%.0f\" $$values.A.Value }}% full"
+          summary: "Disk {{ $labels.partition }} on {{ $labels.vm_name }} is {{ printf \"%.0f\" $values.A.Value }}% full"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
@@ -124,7 +124,7 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "ESXi {{ $$labels.host_name }} memory at {{ printf \"%.0f\" $$values.A.Value }}%"
+          summary: "ESXi {{ $labels.host_name }} memory at {{ printf \"%.0f\" $values.A.Value }}%"
         data:
           - refId: A
             relativeTimeRange: {from: 600, to: 0}
