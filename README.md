@@ -53,6 +53,16 @@ within a few minutes – no SSH needed.
 
 Filters: **Data source**, **ESXi host**, **VM**, **Podman host**, **Container**.
 
+A second dashboard, **k3s Cluster** (`k3s-cluster.json`), covers the k3s cluster from [homelab-k8s](https://github.com/lirant10/homelab-k8s):
+
+| Row | Panels |
+|---|---|
+| Cluster | nodes Ready / not Ready, pods running / not running, restarts in the last hour, exporters up |
+| Nodes | CPU %, memory %, root disk %, network |
+| Workloads | pods not running, deployments (available replicas), restarts per pod |
+
+Filters: **Data source**, **Node**, **Namespace**. Prometheus jobs `k3s-nodes` (node-exporter, `:9100` on each node) and `k3s-state` (kube-state-metrics, NodePort `30081`). Both exporters are deployed by Argo CD in homelab-k8s.
+
 ## Repo layout
 
 ```
