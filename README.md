@@ -13,7 +13,7 @@ and everything behind it – Grafana, Prometheus, Thanos, MinIO and the exporter
 
 ```mermaid
 flowchart LR
-    ESXi[ESXi host] --> VE[vmware-exporter :9272]
+    VC[vCenter 192.168.0.50<br/>all ESXi hosts] --> VE[vmware-exporter :9272]
     PS[Podman socket] --> PE[podman-exporter :9882]
     VE --> P[Prometheus :9090]
     PE --> P
@@ -88,6 +88,28 @@ No credentials are stored in this repo. They live in Podman secrets (and in my V
 | `minio_root_user`, `minio_root_password` | MinIO |
 | `thanos_bucket` | Thanos objstore config (`bucket.yml` with MinIO keys) |
 | `~/.config/vmware-exporter/config.yml` | vSphere credentials for vmware-exporter (kept outside Git) |
+
+`config.yml` needs a `vcenter:` section, because Prometheus scrapes vCenter with `?section=vcenter`.
+A read-only vCenter user is enough:
+
+```yaml
+default:
+  vsphere_host: 192.168.0.50
+  vsphere_user: prometheus@vsphere.local
+  vsphere_password: "..."
+  ignore_ssl: True
+vcenter:
+  vsphere_host: 192.168.0.50
+  vsphere_user: prometheus@vsphere.local
+  vsphere_password: "..."
+  ignore_ssl: True
+  collect_only:
+    vms: True
+    vmguests: True
+    datastores: True
+    hosts: True
+    snapshots: True
+```
 
 ```bash
 read -rsp 'value: ' V && printf '%s' "$V" | podman secret create <name> - && unset V; echo

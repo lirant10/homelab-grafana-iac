@@ -7,9 +7,15 @@ global:
 scrape_configs:
   - job_name: 'vmware_esx'
     metrics_path: /metrics
+    # Scrape vCenter, not each ESXi host: vCenter reports every host it manages
+    # (two hosts today, one of them 192.168.0.49), their VMs and datastores.
+    # Scraping a host directly as well would count its VMs twice on the dashboard.
+    # "section" picks the vcenter: block in ~/.config/vmware-exporter/config.yml.
+    params:
+      section: [vcenter]
     static_configs:
       - targets:
-        - '192.168.0.49'
+        - '192.168.0.50'
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
