@@ -55,6 +55,8 @@ jobs:
           sleep 5
           curl -sf -u admin:admin http://localhost:3000/api/dashboards/uid/homelab-vmware-podman \
             | jq -e '.dashboard.panels | length > 0'
+          curl -sf -u admin:admin http://localhost:3000/api/dashboards/uid/homelab-k3s \
+            | jq -e '.dashboard.panels | length > 0'
           curl -sf -u admin:admin http://localhost:3000/api/datasources/uid/prometheus-homelab \
             | jq -e '.type == "prometheus"'
           curl -sf -u admin:admin http://localhost:3000/api/v1/provisioning/alert-rules \

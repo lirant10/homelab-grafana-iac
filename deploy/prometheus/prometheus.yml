@@ -35,3 +35,21 @@ scrape_configs:
       - targets: ['192.168.0.89:9882']
         labels:
           instance: vaultwarden
+
+  # k3s cluster (repo homelab-k8s, namespace monitoring).
+  # node-exporter runs on each node's own network, port 9100.
+  - job_name: 'k3s-nodes'
+    static_configs:
+      - targets: ['192.168.0.145:9100']
+        labels:
+          instance: k3s-server-01
+      - targets: ['192.168.0.117:9100']
+        labels:
+          instance: k3s-worker-01
+
+  # kube-state-metrics: pods, nodes, deployments. NodePort 30081 on any node.
+  - job_name: 'k3s-state'
+    static_configs:
+      - targets: ['192.168.0.145:30081']
+        labels:
+          instance: k3s
