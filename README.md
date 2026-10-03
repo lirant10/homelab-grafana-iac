@@ -95,12 +95,12 @@ A read-only vCenter user is enough:
 ```yaml
 default:
   vsphere_host: 192.168.0.50
-  vsphere_user: prometheus@vsphere.local
+  vsphere_user: prometheus@lirant.local
   vsphere_password: "..."
   ignore_ssl: True
 vcenter:
   vsphere_host: 192.168.0.50
-  vsphere_user: prometheus@vsphere.local
+  vsphere_user: prometheus@lirant.local
   vsphere_password: "..."
   ignore_ssl: True
   collect_only:
