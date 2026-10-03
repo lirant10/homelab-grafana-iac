@@ -90,7 +90,8 @@ No credentials are stored in this repo. They live in Podman secrets (and in my V
 | `~/.config/vmware-exporter/config.yml` | vSphere credentials for vmware-exporter (kept outside Git) |
 
 `config.yml` needs a `vcenter:` section, because Prometheus scrapes vCenter with `?section=vcenter`.
-A read-only vCenter user is enough:
+A read-only vCenter user is enough. The exporter also refuses to start without a `default:` section,
+and every section needs all the keys below (a missing `specs_size` shows up as `KeyError: 'specs_size'`):
 
 ```yaml
 default:
@@ -98,11 +99,20 @@ default:
   vsphere_user: prometheus@lirant.local
   vsphere_password: "..."
   ignore_ssl: True
+  specs_size: 5000
+  fetch_custom_attributes: False
+  fetch_tags: False
+  fetch_alarms: False
+  collect_only: { vms: True, vmguests: True, datastores: True, hosts: True, snapshots: True }
 vcenter:
   vsphere_host: 192.168.0.50
   vsphere_user: prometheus@lirant.local
   vsphere_password: "..."
   ignore_ssl: True
+  specs_size: 5000
+  fetch_custom_attributes: False
+  fetch_tags: False
+  fetch_alarms: False
   collect_only:
     vms: True
     vmguests: True
